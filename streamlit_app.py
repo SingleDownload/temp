@@ -1,5 +1,6 @@
 import streamlit as st
 from datetime import datetime
+from pytz import timezone
 
 # Initialize medication schedule in session state
 if "MEDICATION_SCHEDULE" not in st.session_state:
@@ -9,9 +10,11 @@ if "MEDICATION_SCHEDULE" not in st.session_state:
         {"time": "08:00 PM", "medicine": "Painkiller", "pill_taken": False},
     ]
 
+DUBAI_TIMEZONE = timezone('Asia/Dubai')
 # Helper Function: Get current time in 12-hour AM/PM
 def current_time_ampm():
-    return datetime.now().strftime("%I:%M %p")
+    local_time = datetime.now(DUBAI_TIMEZONE)
+    return local_time.strftime("%I:%M %p")
 
 # Streamlit UI
 st.title("Smart Pillbox Reminder")
