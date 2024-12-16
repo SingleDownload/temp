@@ -1,20 +1,17 @@
 import streamlit as st
 from datetime import datetime
-from pytz import timezone
+import time
 
-# Initialize medication schedule in session state
-if "MEDICATION_SCHEDULE" not in st.session_state:
-    st.session_state.MEDICATION_SCHEDULE = [
-        {"time": "08:00 AM", "medicine": "Aspirin", "pill_taken": False},
-        {"time": "02:00 PM", "medicine": "Vitamin D", "pill_taken": False},
-        {"time": "08:00 PM", "medicine": "Painkiller", "pill_taken": False},
-    ]
+# Initial Schedule and Medicine Data
+MEDICATION_SCHEDULE = [
+    {"time": "08:00 AM", "medicine": "Aspirin", "pill_taken": False},
+    {"time": "02:00 PM", "medicine": "Vitamin D", "pill_taken": False},
+    {"time": "08:00 PM", "medicine": "Painkiller", "pill_taken": False},
+]
 
-DUBAI_TIMEZONE = timezone('Asia/Dubai')
 # Helper Function: Get current time in 12-hour AM/PM
 def current_time_ampm():
-    local_time = datetime.now(DUBAI_TIMEZONE)
-    return local_time.strftime("%I:%M %p")
+    return datetime.now().strftime("%I:%M %p")
 
 # Streamlit UI
 st.title("Smart Pillbox Reminder")
@@ -28,23 +25,24 @@ if st.button("Add/Modify Reminder"):
     if not time_input or not medicine_input:
         st.error("Please enter both time and medicine type.")
     else:
-        for slot in st.session_state.MEDICATION_SCHEDULE:
+        for slot in MEDICATION_SCHEDULE:
             if slot["time"] == time_input:
                 slot["medicine"] = medicine_input
                 slot["pill_taken"] = False
                 st.success(f"Updated reminder for {time_input} to {medicine_input}.")
                 break
         else:
-            st.session_state.MEDICATION_SCHEDULE.append({"time": time_input, "medicine": medicine_input, "pill_taken": False})
+            MEDICATION_SCHEDULE.append({"time": time_input, "medicine": medicine_input, "pill_taken": False})
             st.success(f"Added new reminder: {medicine_input} at {time_input}.")
 
 # Display Scheduled Reminders
 st.header("Scheduled Reminders")
 if st.button("Show Reminders"):
-    if not st.session_state.MEDICATION_SCHEDULE:
+    if not MEDICATION_SCHEDULE:
         st.info("No reminders set.")
     else:
-        for slot in st.session_state.MEDICATION_SCHEDULE:
+        sorted_schedule = sorted(MEDICATION_SCHEDULE, key=lambda x: datetime.strptime(x["time"], "%I:%M %p"))
+        for slot in sorted_schedule:
             status = "Taken" if slot["pill_taken"] else "Pending"
             st.write(f"- {slot['time']}: {slot['medicine']} ({status})")
 
@@ -63,7 +61,7 @@ if st.button("Pill Taken"):
         st.error("Open the pillbox to take the pill!")
     else:
         current_time = current_time_ampm()
-        for slot in st.session_state.MEDICATION_SCHEDULE:
+        for slot in MEDICATION_SCHEDULE:
             if slot["time"] == current_time and not slot["pill_taken"]:
                 slot["pill_taken"] = True
                 st.success(f"You have taken your {slot['medicine']}.")
@@ -75,7 +73,7 @@ if st.button("Pill Taken"):
 st.header("Test Reminder")
 if st.button("Test Reminder"):
     current_time = current_time_ampm()
-    for slot in st.session_state.MEDICATION_SCHEDULE:
+    for slot in MEDICATION_SCHEDULE:
         if slot["time"] == current_time and not slot["pill_taken"]:
             st.warning(f"It's time to take your {slot['medicine']} ({slot['time']}).")
             break
@@ -85,7 +83,7 @@ if st.button("Test Reminder"):
 # Periodic Reminder Check
 def periodic_reminder():
     current_time = current_time_ampm()
-    for slot in st.session_state.MEDICATION_SCHEDULE:
+    for slot in MEDICATION_SCHEDULE:
         if slot["time"] == current_time and not slot["pill_taken"]:
             st.warning(f"Reminder: It's time to take your {slot['medicine']} ({slot['time']}).")
 
